@@ -21,11 +21,12 @@ def extract_handle(item, namespace):
     return handle
 
 
-def post_parameters(target_url, metadata_system, source_system, handle, title,
-                    bitstream_array):
+def post_parameters(target_url, metadata_system, metadata_id, source_system,
+                    handle, title, bitstream_array):
     """"Posts parameters to API endpoint."""
     params = {}
     params['metadata_system'] = metadata_system
+    params['metadata_id'] = metadata_id
     params['source_system'] = source_system
     params['handle'] = handle
     params['title'] = title

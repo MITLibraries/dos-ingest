@@ -32,12 +32,14 @@ def test_post_parameters():
     with requests_mock.Mocker() as m:
         target_url = 'mock://mock.mock'
         metadata_system = 'archivesspace'
+        metadata_id = 'as00123'
         source_system = 'dome'
         handle = 'hdl.net'
         title = 'Test title'
         bitstream_array = []
         json_object = {'oid': '123'}
         m.post(target_url, json=json_object)
-        id = models.post_parameters(target_url, metadata_system, source_system,
-                                    handle, title, bitstream_array)
+        id = models.post_parameters(target_url, metadata_system, metadata_id,
+                                    source_system, handle, title,
+                                    bitstream_array)
         assert id['oid'] == '123'
