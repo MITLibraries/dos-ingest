@@ -18,10 +18,15 @@ logger = structlog.get_logger()
               help='The source system of the object.')
 @click.option('-f', '--file_type', prompt='Enter file type',
               help='The MIME file type to export.')
-@click.option('-u', '--target_url', prompt='Enter target URL',
-              help='The target URL for ingest.')
+@click.option('-t', '--target_url', envvar='TARGET_URL')
+@click.option('-u', '--username', prompt='Enter username',
+              envvar='TEST_USERNAME', help='The username for authentication.')
+@click.option('-p', '--password', prompt='Enter password',
+              envvar='TEST_PASS', hide_input=True,
+              help='The password for authentication.')
 @click.pass_context
-def main(ctx, metadata_system, source_system, file_type, target_url):
+def main(ctx, metadata_system, source_system, file_type, target_url, username,
+         password):
     dt = datetime.datetime.utcnow().isoformat(timespec='seconds')
     log_suffix = f'{dt}.log'
     structlog.configure(processors=[
@@ -38,11 +43,14 @@ def main(ctx, metadata_system, source_system, file_type, target_url):
                                   'w')],
                         level=logging.INFO)
     logger.info('Application start')
+    header = models.authenticate(target_url, username, password)
+    logger.info('Authenticated')
     ctx.obj = {}
     ctx.obj['metadata_system'] = metadata_system
     ctx.obj['source_system'] = source_system
     ctx.obj['file_type'] = file_type
     ctx.obj['target_url'] = target_url
+    ctx.obj['header'] = header
 
 
 @main.command()
@@ -54,6 +62,7 @@ def oai(ctx, file_name):
     source_system = ctx.obj['source_system']
     file_type = ctx.obj['file_type']
     target_url = ctx.obj['target_url']
+    header = ctx.obj['header']
     items = ET.parse(file_name)
     for item in items.iterfind('oai:record', models.NS):
         handle = models.extract_handle(item, models.NS)
@@ -64,10 +73,11 @@ def oai(ctx, file_name):
         bitstream_array = []
         for bitstream in bitstreams:
             bitstream_array.append(bitstream)
-        id = models.post_parameters(target_url, metadata_system,
-                                    source_system, handle, title,
-                                    bitstream_array)
-        logger.info(id)
+            resp = models.post_parameters(header, target_url, metadata_system,
+                                          source_system, handle, title,
+                                          bitstream_array)
+            for link in resp['files']:
+                logger.info(link)
 
 
 @main.command()

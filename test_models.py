@@ -12,6 +12,18 @@ def item():
     return item
 
 
+def test_authenticate():
+    """"test authenticate function."""
+    with requests_mock.Mocker() as m:
+        token = '123abc'.encode('utf-8')
+        target_url = 'mock://dos.mock'
+        username = 'test'
+        password = 'test'
+        m.post(f'{target_url}users/signin', content=token)
+        header = models.authenticate(target_url, username, password)
+        assert 'Bearer 123abc' == header['Authorization']
+
+
 def test_get_bitstreams(item):
     """"test get_bitstreams function."""
     file_type = 'application/pdf'
@@ -30,14 +42,18 @@ def test_extract_handle(item):
 def test_post_parameters():
     """"test post_parameters function."""
     with requests_mock.Mocker() as m:
-        target_url = 'mock://mock.mock'
+        header = {'Authorization': '123abc'}
+        target_url = 'mock://mock.mock/'
+        full_url = 'mock://mock.mock/object'
         metadata_system = 'archivesspace'
         source_system = 'dome'
         handle = 'hdl.net'
         title = 'Test title'
         bitstream_array = []
-        json_object = {'oid': '123'}
-        m.post(target_url, json=json_object)
-        id = models.post_parameters(target_url, metadata_system, source_system,
-                                    handle, title, bitstream_array)
-        assert id['oid'] == '123'
+        json_object = {'files': [{'path': 'dos://123'}]}
+        m.post(full_url, json=json_object)
+        resp = models.post_parameters(header, target_url, metadata_system,
+                                      source_system, handle, title,
+                                      bitstream_array)
+        for file in resp['files']:
+            assert file['path'] == 'dos://123'
