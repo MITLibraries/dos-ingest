@@ -64,10 +64,11 @@ def oai(ctx, file_name):
         bitstream_array = []
         for bitstream in bitstreams:
             bitstream_array.append(bitstream)
-        id = models.post_parameters(target_url, metadata_system,
-                                    source_system, handle, title,
-                                    bitstream_array)
-        logger.info(id)
+            links = models.post_parameters(target_url, metadata_system,
+                                           source_system, handle, title,
+                                           bitstream_array)
+            for link in links:
+                logger.info(link)
 
 
 @main.command()

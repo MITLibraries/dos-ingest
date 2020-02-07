@@ -1,3 +1,4 @@
+import csv
 import requests
 
 NS = {'oai': 'http://www.openarchives.org/OAI/2.0/',
@@ -34,4 +35,10 @@ def post_parameters(target_url, metadata_system, source_system, handle, title,
     # Will add to header as authentication method becomes clearer
     header = {}
     id = requests.post(target_url, headers=header, params=params).json()
-    return id
+    dig_obj = requests.get(f'{target_url}?oid={id}', headers=header,
+                           params=params).json()
+    links = dig_obj.get('files')
+    for link in links:
+        yield link['path']
+
+
