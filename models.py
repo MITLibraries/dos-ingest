@@ -1,3 +1,4 @@
+import csv
 import requests
 
 NS = {'oai': 'http://www.openarchives.org/OAI/2.0/',
@@ -42,3 +43,12 @@ def post_parameters(header, target_url, metadata_system, source_system, handle,
     resp = requests.post(f'{target_url}object', headers=header,
                          params=params, files=files).json()
     return resp
+
+
+def create_ingest_report(ingest_data, file_name):
+    """Creates ingest report of handles and DOS links."""
+    with open(f'{file_name}-dos-ingest.csv', 'w') as writecsv:
+        writer = csv.writer(writecsv)
+        writer.writerow(['handle'] + ['dos_link'])
+        for link, handle in ingest_data.items():
+            writer.writerow([handle] + [link])
