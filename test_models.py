@@ -26,11 +26,15 @@ def test_authenticate():
 
 def test_get_bitstreams(item):
     """"test get_bitstreams function."""
-    file_type = 'application/pdf'
-    links = models.get_bitstreams(item, file_type, models.NS)
-    for link in links:
-        assert link == ('http://dome.mit.edu/bitstream/handle/1721.3/74331'
-                        + '/MC0356_114633.pdf?sequence=1')
+    with requests_mock.Mocker() as m:
+        file_type = 'application/pdf'
+        url = ('http://dome.mit.edu/bitstream/handle/1721.3/74331'
+               '/MC0356_114633.pdf?sequence=1')
+        content = b'Test content'
+        m.get(url, content=content)
+        bitstreams = models.get_bitstreams(item, file_type, models.NS)
+        for bitstream in bitstreams:
+            assert bitstream == b'Test content'
 
 
 def test_extract_handle(item):

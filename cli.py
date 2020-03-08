@@ -70,12 +70,11 @@ def oai(ctx, file_name):
             continue
         title = item.findtext('.//atom:title', namespaces=models.NS)
         bitstreams = models.get_bitstreams(item, file_type, models.NS)
-        bitstream_array = []
         for bitstream in bitstreams:
-            bitstream_array.append(bitstream)
+            files = {}
+            files['file'] = bitstream
             resp = models.post_parameters(header, target_url, metadata_system,
-                                          source_system, handle, title,
-                                          bitstream_array)
+                                          source_system, handle, title, files)
             for link in resp['files']:
                 logger.info(link)
 
