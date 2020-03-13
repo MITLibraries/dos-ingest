@@ -4,11 +4,21 @@ NS = {'oai': 'http://www.openarchives.org/OAI/2.0/',
       'atom': 'http://www.w3.org/2005/Atom'}
 
 
+def authenticate(target_url, username, password):
+    "Authenticates user to the DOS API."
+    data = {'username': username, 'password': password}
+    session = requests.post(f'{target_url}users/signin', params=data).content
+    session = session.decode('utf-8')
+    header = {'Authorization': f'Bearer {session}'}
+    return header
+
+
 def get_bitstreams(item, file_type, namespace):
     """"Retrieves the bitstreams of the specified item."""
     for element in item.iterfind('.//atom:link', namespace):
         if element.attrib.get('type') == file_type:
-            yield element.attrib['href']
+            bitstream = requests.get(element.attrib['href']).content
+            yield bitstream
 
 
 def extract_handle(item, namespace):
@@ -21,17 +31,14 @@ def extract_handle(item, namespace):
     return handle
 
 
-def post_parameters(target_url, metadata_system, source_system, handle, title,
-                    bitstream_array):
+def post_parameters(header, target_url, metadata_system, source_system, handle,
+                    title, files):
     """"Posts parameters to API endpoint."""
     params = {}
-    params['metadata_system'] = metadata_system
-    params['source_system'] = source_system
+    params['metadata_source'] = metadata_system
+    params['content_source'] = source_system
     params['handle'] = handle
     params['title'] = title
-    params['target_links'] = bitstream_array
-    print(params)
-    # Will add to header as authentication method becomes clearer
-    header = {}
-    id = requests.post(target_url, headers=header, params=params).json()
-    return id
+    resp = requests.post(f'{target_url}object', headers=header,
+                         params=params, files=files).json()
+    return resp
