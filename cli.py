@@ -64,6 +64,7 @@ def oai(ctx, file_name):
     target_url = ctx.obj['target_url']
     header = ctx.obj['header']
     items = ET.parse(file_name)
+    ingest_data = {}
     for item in items.iterfind('oai:record', models.NS):
         handle = models.extract_handle(item, models.NS)
         if handle == '':
@@ -77,6 +78,8 @@ def oai(ctx, file_name):
                                           source_system, handle, title, files)
             for link in resp['files']:
                 logger.info(link)
+                ingest_data[link] = handle
+    models.create_ingest_report(ingest_data, file_name)
 
 
 @main.command()
